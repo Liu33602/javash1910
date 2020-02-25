@@ -1,0 +1,36 @@
+# 数据库连接参数
+# 应用名称
+spring: 
+  application:
+    name: scw-webui
+# 配置redis的连接地址+端口号+密码
+  redis:
+    host: 192.168.37.166
+    port: 6379
+        
+  session:
+    timeout: 1800
+    store-type: redis
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false  # 禁用thymeleaf缓存 [项目在生产环境部署时需要修改为true]
+feign:
+  hystrix:
+    enabled: true  # 启用feign对hystrix的支持      
+  httpclient:
+    connection-timeout: 5000 #远程调用的连接超时的时间
+# 端口号
+server:
+  port: 10000
+#  servlet:
+#    context-path: /app   #设置上下文路径
+# 注册到的注册中心的地址  
+eureka:
+  client:
+    service-url:
+       defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true  # 支持注册中心使用当前应用的ip地址
+    ip-address: 192.168.37.1     # 指定当前应用的ip地址

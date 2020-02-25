@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<!-- 引入提取的 css和js的html代码 
+th:include
+th:replace  属性中   ~{页面名称::碎片名称} 可以引入碎片
+	页面名称最终会交给thymeleaf的视图解析器解析[自动拼接前后缀]
+		classpath:/templates/ + include/base_fragment  +  .html
+		th:include  th:insert   作用一样，不会覆盖双标签内部原本的内容
+		
+		th:replace     会覆盖双标签内部的原本的内容
+-->
+<div th:include="~{include/base_fragments::cssFragment}"></div>
+<div th:insert="~{include/base_fragments :: #jsFragment}"></div>
+<!-- <div th:replace=""></div>
+<div th:insert=""></div> -->
+</head>
+<body>
+	<!-- 
+		thymeleaf的使用： 推荐在标签的属性值中使用
+			1、项目pom文件中引入了thymeleaf的依赖： 场景启动器
+			
+			2、在yml文件中配置thymeleaf的前缀后缀+缓存
+			
+			3、在需要使用thymeleaf的页面中    html开始标签内 声明当前页面需要使用thymeleaf
+					xmlns:th="http://www.thymeleaf.org"
+			4、页面中可以使用thymeleaf的语法：
+				标准thymeleaf的表达式：
+						${}   获取域中变量值的表达式
+						@{}   处理url地址的表达式：自动在绝对地址前拼接上下文路径
+						~{}   在页面中引入其他的页面
+	 -->
+	<!-- 1、获取域中的属性值 显示(字符串)
+			所有的标签中都可以使用 th:xx属性，属性值会在不同的地方显示
+			 th:text="xx" 在双标签内部显示属性值，默认会覆盖标签内的内容
+			 	th:text 属性的属性值也支持 简单运算+比较运算符
+			 	th:text="${session.member.email}==null?'hehe':${session.member.email}"
+			 			-  获取email属性值如果为null则显示hehe字符串，如果不为null则显示email
+			 	th:text="${session.member.userpswd}==null?_:${session.member.userpswd}"	
+			 			- 获取userpswd属性值，如果为null则不要覆盖双标签内部的默认内容，如果不为null则显示userpswd
+			 ${key}  :从request域中获取属性值
+			 ${session.key} :从session域中获取属性值
+			 ${application.key} :从application域中获取属性值
+			 	获取的数据如果是引用类型可以一直用过.属性名获取该数据的属性值显示到页面中
+			 	${user.username}
+			 	
+	 -->
+	<h2>获取域中的属性值</h2>
+	request:
+	<h3 th:text="${reqKey}"></h3>
+	session:
+	<h3 th:text="${session.sessionKey}"></h3>
+	application:
+	<h3 th:text="${application.appKey}"></h3>
+	<h2>获取域中复杂类型对象的属性值</h2>
+	<h3 th:text="${session.member.loginacct}==null?'hehe':${session.member.loginacct}">账号</h3>
+	<h3 th:text="${session.member.email}==null?'hehe':${session.member.email}">邮箱</h3>
+	<h3 th:text="${session.member.userpswd}==null?_:${session.member.userpswd}">密码</h3>
+	<h2>将member集合显示到表格中</h2>
+	<!-- 2、判断request域中的member集合是否为空 
+		th:if="${members}"   集合不为空  得到true
+		th:if="not ${members}"   集合为空  ${members}代表false  ，  not ${members}  得到true
+	-->
+	<div th:if="${members}!=null">
+		<h3>members集合不为空</h3>
+		<!-- 3、集合的遍历显示到表格中 
+			一个集合对应一个表格，集合中一个对象对应一行，一个单元格显示一个属性值
+			遍历集合，集合中的每个对象生成一行显示
+			
+			
+		-->
+		<table class="table" border="1" width="70%">
+			<tr>
+				<th>编号</th>
+				<th>id</th>
+				<th>账号</th>
+				<th>密码</th>
+				<th>邮箱</th>
+				<th>姓名</th>
+			</tr>
+			<!-- 每次遍历都会取出集合中的一个元素使用emp局部变量接受  再将emp存在request域中
+			
+				th:each标签遍历时  也会创建状态对象，每次迭代时都会更新状态对象的属性值
+					count  :代表正在遍历第几个元素，从1开始计算
+					index  ：遍历集合中元素的索引，从0开始计算
+			 -->
+			<tr th:each="emp,vs:${members}">
+				<td th:text="${vs.count}">1</td>
+				<td th:text="${emp.id}">1001</td>
+				<td th:text="${emp.loginacct}">未知</td>
+				<td th:text="|密码: ${emp.userpswd} ......|">xxxx</td>
+				<!-- 如果没有获取到邮箱地址，显示  没有获取到邮箱，如果获取到邮箱地址了，显示 "获取到的邮箱地址:email" -->
+				<td th:text="${emp.email}==null?'没有获取到邮箱地址':'获取到的邮箱地址:'+${emp.email}">xxx@126.com</td>
+				<td th:text="${emp.username}">游客</td>
+			</tr>
+		</table>
+		
+		
+		
+		
+	</div>
+	<div th:if="${members}==null">
+		<h3>members集合为空</h3>
+	</div>
+	
+	<h2>路径处理</h2>
+	<!-- 
+		所有的 页面中的  html标签、js中location、重定向  绝对地址都是由浏览器解析， 默认会在路径前拼接  http://主机ip地址:端口号
+	 	
+	 	http://localhost:10000/test
+	 		springboot项目由于默认没有上下文路径  所以 路径暂时没有问题
+	 		
+	 	thymeleaf语法必须在  th:attr	 属性值中编写
+	 		html标签所有的属性  thymeleaf都提供了对应的th:开头的属性
+	 		
+	 		a标签的  href属性  thymeleaf提供了 th:href   thymeleaf解析时会自动使用th:href属性值替换href属性值
+	 			img:  th:src
+	 			a:   th:href
+	 			link  th:href
+	 			script th:src
+	 		
+	 -->
+	<a href="/aaaa" th:href="@{/test}">点我</a>
+	
+	
+	
+</body>
+</html>
